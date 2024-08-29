@@ -5,7 +5,9 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
+#include "SomeHorror/Components/StaminaComponent.h"
 
 
 constexpr float InteractDistance = 250.0f;
@@ -22,6 +24,8 @@ APlayerCharacter::APlayerCharacter()
 	PlayerCamera->SetupAttachment(StaticMeshComponent);
 
 	HealthComponent = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthCompoent"));
+
+	StaminaComponent = CreateDefaultSubobject<UStaminaComponent>(TEXT("StaminaComponent"));
 	
 
 }
@@ -32,7 +36,6 @@ void APlayerCharacter::BeginPlay()
 	
 	GetCharacterMovement()->MaxWalkSpeed = MaxWalkSpeed;
 	GetCharacterMovement()->MaxWalkSpeedCrouched = 250.0f;
-	
 	
 	
 }
@@ -69,9 +72,9 @@ void APlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(APlayerCharacter, MaxSpeed)
-	DOREPLIFETIME(APlayerCharacter , PlayerMovementState)
-	DOREPLIFETIME(APlayerCharacter , PlayerCustomState)
+	DOREPLIFETIME(APlayerCharacter, MaxSpeed);
+	DOREPLIFETIME(APlayerCharacter , PlayerMovementState);
+	DOREPLIFETIME(APlayerCharacter , PlayerCustomState);
 }
 
 void APlayerCharacter::Move(const FInputActionValue& Value)
@@ -105,8 +108,6 @@ void APlayerCharacter::EquipButtonPressed()
 {
 	if(PlayerCustomState != EPlayerState::EPS_Alive) return;
 
-	GEngine->AddOnScreenDebugMessage(-1 , 3.0f , FColor::Red , "EQPressed");
-
 	FHitResult HitResult;
 	const FVector CameraLocation = PlayerCamera->GetComponentLocation();
 
@@ -116,14 +117,7 @@ void APlayerCharacter::EquipButtonPressed()
 
 	GEngine->AddOnScreenDebugMessage(-1 , 3.0f , FColor::Red , HitResult.GetActor()->GetName());
 
-	if(HitResult.GetActor()->IsA(APlayerCharacter::StaticClass()))
-	{
-		APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(HitResult.GetActor());
-		{
-			PlayerCharacter->GetHealthComponent()->TakeDamage(100.0f);
-			//Damage_Server(PlayerCharacter);
-		}
-	}
+	
 }
 
 void APlayerCharacter::Damage_Server_Implementation(APlayerCharacter* PlayerCharacter)
@@ -132,29 +126,14 @@ void APlayerCharacter::Damage_Server_Implementation(APlayerCharacter* PlayerChar
 }
 
 
-
 void APlayerCharacter::PlayerKnockDown_Implementation()
 {
 	PlayerCustomState = EPlayerState::EPS_KnockDown;
 	PlayerMovementState = EPlayerMovementState::EPMS_Lie;
-
-	GEngine->AddOnScreenDebugMessage(-1 , 10.0f , FColor::Orange , "Server");
-
-	if(HasAuthority())
-	{
-		GEngine->AddOnScreenDebugMessage(-1 , 10.0f , FColor::Orange , "Server");
-	}
-	else
-	{
-		GEngine->AddOnScreenDebugMessage(-1 , 10.0f , FColor::Orange , "Client");
-	}
 	
-
 	MaxSpeed = 150.0f;
 
 	GetCharacterMovement()->MaxWalkSpeed = MaxSpeed;
-
-	//ChangeMaxSpeed_Server(150.0f);
 }
 
 void APlayerCharacter::PlayerRecovered()
@@ -172,7 +151,16 @@ void APlayerCharacter::PlayerCrouch()
 	if(CanCrouch())
 	{
 		Crouch();
-		PlayerMovementState = EPlayerMovementState::EPMS_Crouch;
+
+		if(HasAuthority())
+		{
+			PlayerMovementState = EPlayerMovementState::EPMS_Crouch;
+		}
+
+		else
+		{
+			ChangePlayerMovementState_Server(EPlayerMovementState::EPMS_Crouch);
+		}
 	}
 
 	
@@ -183,26 +171,41 @@ void APlayerCharacter::PlayerStopCrouch()
 	if(PlayerCustomState != EPlayerState::EPS_Alive || PlayerCustomState == EPlayerState::EPS_KnockDown) return;
 
 	UnCrouch();
-	PlayerMovementState = EPlayerMovementState::EPMS_Default;
+
+	if(HasAuthority())
+		PlayerMovementState = EPlayerMovementState::EPMS_Default;
+	else
+	{
+		ChangePlayerMovementState_Server(EPlayerMovementState::EPMS_Default);
+	}
 }
 
 void APlayerCharacter::PlayerStartRunning_Implementation()
 {
-	if(PlayerCustomState != EPlayerState::EPS_Alive || PlayerCustomState == EPlayerState::EPS_KnockDown) return;
+	if(PlayerCustomState != EPlayerState::EPS_Alive || PlayerCustomState == EPlayerState::EPS_KnockDown || GetCharacterMovement()->IsCrouching()) return;
+
+	if(StaminaComponent && !StaminaComponent->CanRun) return;
+
+	StaminaComponent->StartConsumeStamina();
+		
 	
 	PlayerMovementState = EPlayerMovementState::EPMS_Default;
-	
+
+	GEngine->AddOnScreenDebugMessage(-1 , 10.0f , FColor::Red , "Running");
 	
 	MaxSpeed = MaxRunSpeed;
 
 	GetCharacterMovement()->MaxWalkSpeed = MaxSpeed;
 	
+	
 }
 
 void APlayerCharacter::PlayerStopRunning_Implementation()
 {
-	if(PlayerCustomState != EPlayerState::EPS_Alive || PlayerCustomState == EPlayerState::EPS_KnockDown) return;
-	
+	if(PlayerCustomState != EPlayerState::EPS_Alive || PlayerCustomState == EPlayerState::EPS_KnockDown || GetCharacterMovement()->IsCrouching()) return;
+
+	if(StaminaComponent)
+		StaminaComponent->StartRegenerateStamina();
 	
 	PlayerMovementState = EPlayerMovementState::EPMS_Default;
 	
@@ -261,7 +264,7 @@ void APlayerCharacter::OnRep_MaxSpeed()
 
 void APlayerCharacter::OnRep_MovementState()
 {
-	ChangePlayerMovementState_Server(PlayerMovementState);
+	GEngine->AddOnScreenDebugMessage(-1 , 10.0f , FColor::Orange , "MovementReplication");
 }
 
 

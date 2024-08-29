@@ -3,11 +3,14 @@
 
 #include "HealthComponent.h"
 
+#include "Engine/Engine.h"
 #include "SomeHorror/Characters/PlayerCharacter.h"
 
 UHealthComponent::UHealthComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
+
+	SetIsReplicated(true);
 	
 }
 
@@ -43,10 +46,10 @@ void UHealthComponent::KnockDown()
 	}, 1.0f , true  , -1.0f);
 }
 
-void UHealthComponent::TakeDamage(const float Damage)
+void UHealthComponent::TakeDamage(const float Damage) 
 {
 	CurrentHealth = FMath::Clamp(CurrentHealth - Damage , 0.0f , MaxHealth);
-
+	
 	if(CurrentHealth == 0.0f)
 	{
 		switch (PlayerCharacter->GetPlayerState())

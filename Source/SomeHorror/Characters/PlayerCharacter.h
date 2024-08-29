@@ -17,6 +17,7 @@ UCLASS()
 class SOMEHORROR_API APlayerCharacter : public ACharacter
 {
 	friend UHealthComponent;
+	friend class UStaminaComponent;
 
 	GENERATED_BODY()
 
@@ -42,6 +43,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly , Category = DefaultComponents)
 	UHealthComponent* HealthComponent;
+
+	UPROPERTY(EditDefaultsOnly , Category = DefaultComponents)
+	UStaminaComponent* StaminaComponent;
 
 
 protected:
@@ -124,9 +128,6 @@ protected:
 
 	UPROPERTY(ReplicatedUsing = OnRep_MaxSpeed)
 	float MaxSpeed = MaxWalkSpeed;
-
-
-protected:
 
 
 protected:
