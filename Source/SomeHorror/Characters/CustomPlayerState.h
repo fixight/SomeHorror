@@ -4,7 +4,7 @@ UENUM(BlueprintType)
 enum class EPlayerState : uint8
 {
 	EPS_Alive UMETA(DisplayName = "PlayerAlive") ,
-	EPS_KnowDown UMETA(DisplayName = "PlayerKnowDown") ,
+	EPS_KnockDown UMETA(DisplayName = "PlayerKnowDown") ,
 	EPS_Dead UMETA(DisplayName = "PlayerDead") ,
 	EPS_Max UMETA(DisplayName = "Max")
 };

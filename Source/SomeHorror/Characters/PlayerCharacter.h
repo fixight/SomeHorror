@@ -8,11 +8,17 @@
 #include "CustomPlayerState.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/Character.h"
+#include "SomeHorror/Components/HealthComponent.h"
 #include "PlayerCharacter.generated.h"
+
+
 
 UCLASS()
 class SOMEHORROR_API APlayerCharacter : public ACharacter
 {
+	friend UHealthComponent;
+	friend class UStaminaComponent;
+
 	GENERATED_BODY()
 
 public:
@@ -35,13 +41,18 @@ protected:
 	UPROPERTY(EditDefaultsOnly , Category = DefaultComponents)
 	UStaticMeshComponent* StaticMeshComponent;
 
+	UPROPERTY(EditDefaultsOnly , Category = DefaultComponents)
+	UHealthComponent* HealthComponent;
+
+	UPROPERTY(EditDefaultsOnly , Category = DefaultComponents)
+	UStaminaComponent* StaminaComponent;
+
 
 protected:
 	void Move(const FInputActionValue& Value);
 	
 	void Look(const FInputActionValue& Value);
 
-	void EquipButtonPressed();
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
@@ -56,20 +67,27 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
 	UInputAction* CrouchAction;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
+	UInputAction* EquipAction;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* LookAction;
 
 protected:
-	void PlayerKnowDown();
+
+	UFUNCTION(Server , Reliable)
+	void PlayerKnockDown();
 
 	void PlayerRecovered();
 
 	void PlayerCrouch();
-
+	
 	void PlayerStopCrouch();
 
+	UFUNCTION(Server , Reliable)
 	void PlayerStartRunning();
 
+	UFUNCTION(Server , Reliable)
 	void PlayerStopRunning();
 
 	void PlayerStartCarrying();
@@ -78,13 +96,22 @@ protected:
 
 	void PlayerDead();
 
+	void EquipButtonPressed();
+
+
 
 protected:
 	UFUNCTION(Server , Reliable)
 	void ChangeMaxSpeed_Server(const float Speed);
 
 	UFUNCTION(Server , Reliable)
+	void Damage_Server(APlayerCharacter* PlayerCharacter);
+
+	UFUNCTION(Server , Reliable)
 	void ChangePlayerMovementState_Server(const EPlayerMovementState MovementState);
+
+	UFUNCTION(Server , Reliable)
+	void ChangePlayerState_Server(const EPlayerState State);
 
 	UFUNCTION()
 	void OnRep_MaxSpeed();
@@ -104,10 +131,8 @@ protected:
 
 
 protected:
-
-
-protected:
-	EPlayerState PlayerState = EPlayerState::EPS_Alive;
+	UPROPERTY(Replicated)
+	EPlayerState PlayerCustomState = EPlayerState::EPS_Alive;
 
 	UPROPERTY(ReplicatedUsing = OnRep_MovementState)
 	EPlayerMovementState PlayerMovementState = EPlayerMovementState::EPMS_Default;
@@ -115,5 +140,13 @@ protected:
 public:
 	UFUNCTION(BlueprintCallable)
 	EPlayerMovementState GetPlayerMovementState(){return PlayerMovementState;}
+
+	UFUNCTION(BlueprintCallable)
+	EPlayerState GetPlayerState(){return PlayerCustomState;}
+
+	UFUNCTION(BlueprintCallable)
+	UHealthComponent* GetHealthComponent(){return HealthComponent;}
+
+	
 
 };
