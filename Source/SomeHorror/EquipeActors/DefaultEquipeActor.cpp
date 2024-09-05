@@ -1,24 +1,66 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "EquipeActors/DefaultEquipeActor.h"
+#include "DefaultEquipeActor.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "Components/StaticMeshComponent.h"
 
-// Sets default values
 ADefaultEquipeActor::ADefaultEquipeActor()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+	SceneComponent = CreateDefaultSubobject<USceneComponent>(TEXT("SceneComponent"));
+
+	SetRootComponent(SceneComponent);
+
+	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshCompoent"));
+	MeshComponent->SetupAttachment(SceneComponent);
+
+	bReplicates = true;
+	
+	
 }
 
-// Called when the game starts or when spawned
 void ADefaultEquipeActor::BeginPlay()
 {
 	Super::BeginPlay();
 	
 }
 
-// Called every frame
+void ADefaultEquipeActor::Interact()
+{
+	checkf(true , TEXT("FunctionMustBeOverride"))
+}
+
+void ADefaultEquipeActor::ThrowObject(ACharacter* Character)
+{
+	DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+
+	FVector CharacterForwardVector = Character->GetActorForwardVector();
+
+	CharacterForwardVector.Z = 0;
+	
+	SetActorLocation(Character->GetActorLocation() + CharacterForwardVector * 150.0f);
+
+	SetActorEnableCollision(true);
+	
+}
+
+void ADefaultEquipeActor::TakeObject(ACharacter* Character)
+{
+	FAttachmentTransformRules AttachmentRules(
+			EAttachmentRule::KeepWorld,
+			EAttachmentRule::KeepRelative,     
+			EAttachmentRule::KeepRelative,  
+			true                          
+		);
+	
+	SetActorLocation(Character->GetMesh()->GetSocketLocation(AttachSocketName));
+	AttachToComponent(Character->GetMesh(), AttachmentRules, AttachSocketName);
+	SetActorEnableCollision(false);
+
+}
+
 void ADefaultEquipeActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);

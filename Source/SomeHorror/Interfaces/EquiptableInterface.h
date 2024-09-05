@@ -12,13 +12,14 @@ class UEquiptableInterface : public UInterface
 	GENERATED_BODY()
 };
 
-/**
- * 
- */
 class SOMEHORROR_API IEquiptableInterface
 {
 	GENERATED_BODY()
 
 protected:
-	virtual void Interact();
+	virtual void Interact() = 0;
+
+	virtual void TakeObject(class ACharacter* Character) = 0;
+
+	virtual void ThrowObject(class ACharacter* Character) = 0;
 };

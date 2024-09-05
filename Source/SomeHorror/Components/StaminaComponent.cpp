@@ -3,6 +3,7 @@
 #include "StaminaComponent.h"
 
 #include "Engine/Engine.h"
+#include "SomeHorror/Characters/EnemyCharacter/EnemyCharacter.h"
 
 UStaminaComponent::UStaminaComponent()
 {
@@ -13,6 +14,9 @@ UStaminaComponent::UStaminaComponent()
 void UStaminaComponent::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if(GetOwner()->IsA(AEnemyCharacter::StaticClass())) PrimaryComponentTick.bCanEverTick = false;
+	
 
 	PlayerCharacter = Cast<APlayerCharacter>(GetOwner());
 	

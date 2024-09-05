@@ -4,23 +4,39 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "GameFramework/Character.h"
+#include "SomeHorror/Interfaces/EquiptableInterface.h"
 #include "DefaultEquipeActor.generated.h"
 
-UCLASS()
-class SOMEHORROR_API ADefaultEquipeActor : public AActor
+UCLASS(Abstract)
+class SOMEHORROR_API ADefaultEquipeActor : public AActor , public IEquiptableInterface
 {
 	GENERATED_BODY()
 	
 public:	
-	// Sets default values for this actor's properties
 	ADefaultEquipeActor();
 
 protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+protected:
+	UPROPERTY(EditDefaultsOnly)
+	UStaticMeshComponent* MeshComponent;
+
+	UPROPERTY(EditDefaultsOnly)
+	USceneComponent* SceneComponent;
+
+	UPROPERTY(EditDefaultsOnly)
+	FName AttachSocketName;
+
+public:
+	virtual void Interact() override;
+
+	virtual void ThrowObject(ACharacter* Character) override;
+
+	virtual void TakeObject(ACharacter* Character) override;
+
 public:	
-	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
 };
