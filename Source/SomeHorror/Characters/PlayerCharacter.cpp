@@ -4,7 +4,9 @@
 #include "VectorTypes.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "EnemyCharacter/EnemyCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "GameFramework/SpringArmComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 #include "SomeHorror/Components/StaminaComponent.h"
@@ -20,12 +22,16 @@ APlayerCharacter::APlayerCharacter()
 	StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComponent"));
 	StaticMeshComponent->SetupAttachment( Cast<USceneComponent>(GetCapsuleComponent()));
 
+	//SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
+	//SpringArmComponent->SetupAttachment(GetCapsuleComponent());
+
 	PlayerCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraCompoent"));
 	PlayerCamera->SetupAttachment(StaticMeshComponent);
 
 	HealthComponent = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthCompoent"));
 
 	StaminaComponent = CreateDefaultSubobject<UStaminaComponent>(TEXT("StaminaComponent"));
+	
 	
 
 }
@@ -36,6 +42,11 @@ void APlayerCharacter::BeginPlay()
 	
 	GetCharacterMovement()->MaxWalkSpeed = MaxWalkSpeed;
 	GetCharacterMovement()->MaxWalkSpeedCrouched = 250.0f;
+
+	if(IsLocallyControlled())
+	{
+		GetMesh()->SetVisibility(false);
+	}
 	
 	
 }
@@ -58,11 +69,12 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Move);
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Look);
-		EnhancedInputComponent->BindAction(RunAction , ETriggerEvent::Started , this , &APlayerCharacter::PlayerStartRunning);
-		EnhancedInputComponent->BindAction(RunAction , ETriggerEvent::Completed , this , &APlayerCharacter::PlayerStopRunning);
+		RunInputBindingHandle = EnhancedInputComponent->BindAction(RunAction , ETriggerEvent::Started , this , &APlayerCharacter::PlayerStartRunning).GetHandle();
+		StopRunInputBindingHandle = EnhancedInputComponent->BindAction(RunAction , ETriggerEvent::Completed , this , &APlayerCharacter::PlayerStopRunning).GetHandle();
 		EnhancedInputComponent->BindAction(CrouchAction , ETriggerEvent::Started , this , &APlayerCharacter::PlayerCrouch);
 		EnhancedInputComponent->BindAction(CrouchAction , ETriggerEvent::Completed , this , &APlayerCharacter::PlayerStopCrouch);
 		EnhancedInputComponent->BindAction(EquipAction , ETriggerEvent::Started , this , &APlayerCharacter::EquipButtonPressed);
+		EnhancedInputComponent->BindAction(InteractAction , ETriggerEvent::Started , this , &APlayerCharacter::InteractEquiped);
 	}
 	
 
@@ -75,6 +87,7 @@ void APlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME(APlayerCharacter, MaxSpeed);
 	DOREPLIFETIME(APlayerCharacter , PlayerMovementState);
 	DOREPLIFETIME(APlayerCharacter , PlayerCustomState);
+	DOREPLIFETIME(APlayerCharacter , EquipeActor);
 }
 
 void APlayerCharacter::Move(const FInputActionValue& Value)
@@ -116,9 +129,42 @@ void APlayerCharacter::EquipButtonPressed()
 	if(!HitResult.bBlockingHit) return;
 
 	GEngine->AddOnScreenDebugMessage(-1 , 3.0f , FColor::Red , HitResult.GetActor()->GetName());
+	
+	if(HitResult.GetActor()->Implements<UEquiptableInterface>())
+	{
+		GEngine->AddOnScreenDebugMessage(-1 , 3.0f , FColor::Red , "CanBeEqueped");
+
+		if(HasAuthority())
+		{
+			EquipeActor = Cast<ADefaultEquipeActor>(HitResult.GetActor());
+			EquipeActor->SetActorEnableCollision(false);
+			EquipeActor->TakeObject(this);
+		}
+
+		else
+		{
+			HitResult.GetActor()->SetActorEnableCollision(false);
+			Equip(Cast<ADefaultEquipeActor>(HitResult.GetActor()));
+		}
+		
+		
+	}
 
 	
 }
+
+void APlayerCharacter::InteractEquiped()
+{
+	if(EquipeActor)
+		EquipeActor->Interact();
+}
+
+void APlayerCharacter::Equip_Implementation(ADefaultEquipeActor* ActorToEquip)
+{
+	EquipeActor = ActorToEquip;
+	EquipeActor->TakeObject(this);
+}
+
 
 void APlayerCharacter::Damage_Server_Implementation(APlayerCharacter* PlayerCharacter)
 {
@@ -147,9 +193,13 @@ void APlayerCharacter::PlayerRecovered()
 void APlayerCharacter::PlayerCrouch()
 {
 	if(PlayerCustomState != EPlayerState::EPS_Alive || PlayerCustomState == EPlayerState::EPS_KnockDown) return;
+	
+	GEngine->AddOnScreenDebugMessage(-1 , 3.0f , FColor::Red , "Crouch");
 
 	if(CanCrouch())
 	{
+
+		GEngine->AddOnScreenDebugMessage(-1 , 3.0f , FColor::Red , "Crouch");
 		Crouch();
 
 		if(HasAuthority())

@@ -6,9 +6,11 @@
 #include "InputAction.h"
 #include "InputActionValue.h"
 #include "CustomPlayerState.h"
+#include "EnhancedInputComponent.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/Character.h"
 #include "SomeHorror/Components/HealthComponent.h"
+#include "SomeHorror/EquipeActors/DefaultEquipeActor.h"
 #include "PlayerCharacter.generated.h"
 
 
@@ -34,13 +36,15 @@ public:
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
+	UCameraComponent* GetCameraComponent(){return PlayerCamera;}
+
 protected:
 	UPROPERTY(EditDefaultsOnly , Category = DefaultComponents)
 	UCameraComponent* PlayerCamera;
 
 	UPROPERTY(EditDefaultsOnly , Category = DefaultComponents)
 	UStaticMeshComponent* StaticMeshComponent;
-
+	
 	UPROPERTY(EditDefaultsOnly , Category = DefaultComponents)
 	UHealthComponent* HealthComponent;
 
@@ -64,11 +68,18 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
 	UInputAction* RunAction;
 
+	int RunInputBindingHandle;
+
+	int StopRunInputBindingHandle;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
 	UInputAction* CrouchAction;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
 	UInputAction* EquipAction;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
+	UInputAction* InteractAction;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* LookAction;
@@ -97,6 +108,11 @@ protected:
 	void PlayerDead();
 
 	void EquipButtonPressed();
+
+	void InteractEquiped();
+
+	UFUNCTION(Server , Reliable)
+	void Equip(ADefaultEquipeActor* EquipedActor);
 
 
 
@@ -149,4 +165,9 @@ public:
 
 	
 
+protected:
+
+	UPROPERTY(Replicated)
+	ADefaultEquipeActor* EquipeActor;
+	
 };

@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Characters/EnemyCharacter/EnemyCharacter.h"
 #include "GameFramework/GameModeBase.h"
 #include "SomeHorrorGameMode.generated.h"
 
@@ -13,6 +14,21 @@ class ASomeHorrorGameMode : public AGameModeBase
 
 public:
 	ASomeHorrorGameMode();
+
+	virtual void PostLogin(APlayerController* NewPlayer) override;
+
+protected:
+	const bool IsHost(APlayerController* PlayerController);
+
+protected:
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<AEnemyCharacter> EnemyCharacter;
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<APlayerCharacter> PlayerCharacter;
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<APlayerController> PlayerController;
 };
 
 
