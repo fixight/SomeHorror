@@ -31,16 +31,7 @@ void ASomeHorrorGameMode::PostLogin(APlayerController* NewPlayer)
 	
 	FVector SpawnLocation = PlayerStart->GetActorLocation();
 	FRotator SpawnRotation = PlayerStart->GetActorRotation();
-
-	if (IsHost(NewPlayer))
-	{
-		GEngine->AddOnScreenDebugMessage(-1 , 6.0f , FColor::Red , "Server");
-	}
-
-	else
-	{
-		GEngine->AddOnScreenDebugMessage(-1 , 6.0f , FColor::Green , "Client");
-	}
+	
 
 	if(IsHost(NewPlayer))
 	{
