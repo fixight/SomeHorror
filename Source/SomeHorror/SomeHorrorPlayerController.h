@@ -22,6 +22,25 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 	UInputMappingContext* InputMappingContext;
 
+protected:
+	
+
+	ASomeHorrorPlayerController();
+
+public:
+
+	
+	void PossesLobbyCamera();
+
+	virtual void Tick(float DeltaSeconds) override;
+
+	virtual void OnPossess(APawn* InPawn) override;
+
+	bool IsFaster = false;
+
+
+	void Client_SetLobbyCamera(ACameraActor* LobbyCamera);
+
 	// Begin Actor interface
 protected:
 
