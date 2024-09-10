@@ -3,14 +3,32 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Animation/AnimationAsset.h"
 #include "Engine/AssetManager.h"
+#include "Engine/DataTable.h"
 #include "Engine/StreamableManager.h"
 #include "Kismet/GameplayStatics.h"
 #include "UObject/NoExportTypes.h"
 #include "AssetLoader.generated.h"
 
 
-	
+USTRUCT(Blueprintable)
+struct FAnimationTableRow : public FTableRowBase
+{
+	GENERATED_USTRUCT_BODY()
+ 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FString AnimationName;
+ 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TAssetPtr<UAnimationAsset> Asset;
+ 
+	FAnimationTableRow() :
+		AnimationName(TEXT("")),
+		Asset(nullptr)
+	{
+	}
+};
 
 UCLASS()
 class SOMEHORROR_API UAssetLoader : public UObject

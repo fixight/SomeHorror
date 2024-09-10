@@ -4,8 +4,12 @@
 #include "SomeHorrorPlayerController.h"
 #include "EnhancedInputSubsystems.h"
 #include "Camera/CameraActor.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "Engine/Engine.h"
 #include "Engine/LocalPlayer.h"
+#include "GameFramework/Character.h"
 #include "Kismet/GameplayStatics.h"
+#include "Net/UnrealNetwork.h"
 
 
 ASomeHorrorPlayerController::ASomeHorrorPlayerController()
@@ -32,21 +36,6 @@ void ASomeHorrorPlayerController::PossesLobbyCamera()
 void ASomeHorrorPlayerController::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
-
-	//SetActorTickInterval(3.0f);
-	
-
-	TArray<AActor*> FoundCameras;
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACameraActor::StaticClass(), FoundCameras);
-
-	if (FoundCameras.Num() > 0)
-	{
-		ACameraActor* LobbyCamera = Cast<ACameraActor>(FoundCameras[0]);
-		if (LobbyCamera)
-		{
-			//SetViewTarget(LobbyCamera);
-		}
-	}
 	
 }
 
@@ -54,53 +43,55 @@ void ASomeHorrorPlayerController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
 
-	TArray<AActor*> FoundCameras;
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACameraActor::StaticClass(), FoundCameras);
-
-	if (FoundCameras.Num() > 0)
-	{
-		ACameraActor* LobbyCamera = Cast<ACameraActor>(FoundCameras[0]);
-		if (LobbyCamera)
-		{
-			GEngine->AddOnScreenDebugMessage(-1 , 4.0f , FColor::Red , "Valid");
-			//SetViewTarget(LobbyCamera);
-		}
-	}
+	
+	
 	
 }
 
-void ASomeHorrorPlayerController::Client_SetLobbyCamera(ACameraActor* LobbyCamera)
+
+void ASomeHorrorPlayerController::SendRequstToServer_Implementation()
 {
-	if (LobbyCamera)
+	SetLobbyIdleAnimation(nullptr);
+}
+
+void ASomeHorrorPlayerController::PlayAnimation()
+{
+	
+
+	if (ACharacter* Charr = Cast<ACharacter>(this->GetPawn()))
 	{
-		SetViewTarget(LobbyCamera);
+		// Получаем SkeletalMeshComponent
+		USkeletalMeshComponent* SkeletalMesh = Charr->GetMesh();
+        
+		if (SkeletalMesh)
+		{
+			
+			GEngine->AddOnScreenDebugMessage(-1 , 3.0f , FColor::Red , "PlayAnimation");
+			SkeletalMesh->PlayAnimation(LobbyIdleAnimation, true);
+		}
 	}
+}
+
+void ASomeHorrorPlayerController::SetLobbyIdleAnimation(UAnimationAsset* AnimSequence)
+{
+	//if(AnimSequence)
+		//LobbyIdleAnimation = AnimSequence;
+	
 }
 
 void ASomeHorrorPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
-
-	//SetActorTickEnabled(false);
-
-	TArray<AActor*> FoundCameras;
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACameraActor::StaticClass(), FoundCameras);
-
-	if (FoundCameras.Num() > 0)
-	{
-		ACameraActor* LobbyCamera = Cast<ACameraActor>(FoundCameras[0]);
-		if (LobbyCamera)
-		{
-			GEngine->AddOnScreenDebugMessage(-1 , 4.0f , FColor::Red , "Valid");
-			//SetViewTarget(LobbyCamera);
-		}
-	}
 	
-	
-	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
-	{
-		Subsystem->AddMappingContext(InputMappingContext, 0);
-	}
+
 
 	
+}
+
+
+void ASomeHorrorPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+
 }

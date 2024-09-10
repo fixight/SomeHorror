@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Animation/AnimInstance.h"
 #include "GameFramework/PlayerController.h"
 #include "SomeHorrorPlayerController.generated.h"
 
@@ -30,21 +31,32 @@ protected:
 public:
 
 	
+
+	
 	void PossesLobbyCamera();
 
 	virtual void Tick(float DeltaSeconds) override;
 
 	virtual void OnPossess(APawn* InPawn) override;
 
-	bool IsFaster = false;
+	UFUNCTION(Server , Reliable)
+	void SendRequstToServer();
 
+	void PlayAnimation();
+	
+	void SetLobbyIdleAnimation(UAnimationAsset* AnimSequence);
 
-	void Client_SetLobbyCamera(ACameraActor* LobbyCamera);
-
-	// Begin Actor interface
 protected:
 
 	virtual void BeginPlay() override;
 
-	// End Actor interface
+
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+
+public:
+	UPROPERTY()
+	UAnimationAsset* LobbyIdleAnimation;
+	
 };
