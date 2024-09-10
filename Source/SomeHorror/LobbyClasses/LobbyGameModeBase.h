@@ -4,7 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "LobbyCharacter.h"
+#include "Engine/DataTable.h"
 #include "GameFramework/GameModeBase.h"
+#include "SomeHorror/SomeHorrorPlayerController.h"
 #include "LobbyGameModeBase.generated.h"
 
 USTRUCT(Blueprintable)
@@ -32,6 +34,8 @@ class SOMEHORROR_API ALobbyGameModeBase : public AGameModeBase
 
 	ALobbyGameModeBase();
 
+	virtual void BeginPlay() override;
+
 protected:
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 
@@ -44,15 +48,33 @@ protected:
 	//UPROPERTY(EditDefaultsOnly)
 	//TSubclassOf<ALobbyCharacter> LobbyCharacter;
 
-	UFUNCTION(Client , Reliable)
+	UFUNCTION(NetMulticast , Reliable)
 	void LoadMeshesOnAllMachines();
+	
+	void LoadAnimationAllClient(FName AnimationName , ASomeHorrorPlayerController* LoadInstigator);
 
 	UFUNCTION(Client , Reliable)
 	void ChangeView(APlayerController* PlayerController);
 
+	UAnimationAsset* GetRandomAnimAsset();
+
+	UFUNCTION(BlueprintCallable)
+	FName GetRandomRowName(UDataTable* DataTable);
+
 protected:
 	UPROPERTY(EditDefaultsOnly)
 	UDataTable* MeshesDataTable;
+
+	UPROPERTY(EditDefaultsOnly)
+	UDataTable* AnimationDataTable;
+
+	UPROPERTY(EditDefaultsOnly)
+	USkeletalMesh* EnemySkeletalMesh;
+
+	UPROPERTY(EditDefaultsOnly)
+	TArray<UAnimationAsset*> AnimAssets;
+
+	
 };
 
 
