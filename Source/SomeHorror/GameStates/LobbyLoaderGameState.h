@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Engine/DataTable.h"
 #include "GameFramework/GameState.h"
 #include "SomeHorror/LobbyClasses/LobbyCharacter.h"
 #include "LobbyLoaderGameState.generated.h"
@@ -26,6 +27,9 @@ public:
 
 	UFUNCTION(NetMulticast , Reliable)
 	void InitLobbyCharacter(FName SkeletalMeshName , UDataTable* MeshDataTable , FName AnimationName , UDataTable* AnimationDataTable , ALobbyCharacter* LobbyCharacter);
+
+	UFUNCTION(NetMulticast , Reliable)
+	void SetNameOnWidgets(FName Name , ALobbyCharacter* LobbyCharacter);
 
 	
 	

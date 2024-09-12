@@ -33,6 +33,7 @@ void ALobbyGameModeBase::PostLogin(APlayerController* NewPlayer)
 
 	if(IsHost(NewPlayer))
 	{
+		CurrentEnemy = LobbyCharacter;
 		AName = "ZombieIdle";
 		MName = "Enemy";
 	}
@@ -40,11 +41,13 @@ void ALobbyGameModeBase::PostLogin(APlayerController* NewPlayer)
 	else
 	{
 		AName = RandomRowName;
-		MName = "Amanda";
+		MName = GetRandomRowName(MeshesDataTable);
 	}
 	
 	
 	LoaderGameState->InitLobbyCharacter(MName , MeshesDataTable , AName , AnimationDataTable , LobbyCharacter);
+	FName PlayerName = FName(*MyPlayerController->GetName());
+	LoaderGameState->SetNameOnWidgets(PlayerName , LobbyCharacter);
 	
 
 	
@@ -62,25 +65,15 @@ const bool ALobbyGameModeBase::IsHost(APlayerController* Controller)
 	return (Controller->HasAuthority() && Controller->IsLocalPlayerController());
 }
 
-
-
-void ALobbyGameModeBase::LoadAnimationAllClient(FName AnimationName , ASomeHorrorPlayerController* LoadInstigator)
+void ALobbyGameModeBase::ChangeEnemy(ALobbyCharacter* NewEnemy)
 {
-	
-	UAssetLoader::AsyncLoadAsset<UAnimationAsset , FAnimationTableRow>(AnimationDataTable , AnimationName, [LoadInstigator](UAnimationAsset* AnimationAsset)
-	{
-		LoadInstigator->SetLobbyIdleAnimation(AnimationAsset);
-	});
+	FName AName = "ZombieIdle";
+	FName MName = "Enemy";
+	LobbyLoaderGameState->InitLobbyCharacter(GetRandomRowName(MeshesDataTable) , MeshesDataTable , GetRandomRowName(AnimationDataTable) , AnimationDataTable , CurrentEnemy);
+	LobbyLoaderGameState->InitLobbyCharacter(MName , MeshesDataTable , AName , AnimationDataTable , NewEnemy);
+	CurrentEnemy = NewEnemy;
 }
 
-UAnimationAsset* ALobbyGameModeBase::GetRandomAnimAsset()
-{
-	const int RandomIndex = FMath::RandRange(0 , AnimAssets.Num() - 1);
-
-	if(AnimAssets[RandomIndex]) return AnimAssets[RandomIndex];
-
-	return nullptr;
-}
 
 FName ALobbyGameModeBase::GetRandomRowName(UDataTable* DataTable)
 {
@@ -93,6 +86,7 @@ FName ALobbyGameModeBase::GetRandomRowName(UDataTable* DataTable)
 	TArray<FName> RowNames = DataTable->GetRowNames();
 
 	RowNames.Remove("ZombieIdle");
+	RowNames.Remove("Enemy");
 	
 	if (RowNames.Num() == 0)
 	{
@@ -104,25 +98,7 @@ FName ALobbyGameModeBase::GetRandomRowName(UDataTable* DataTable)
 	return RowNames[RandomIndex];
 }
 
-void ALobbyGameModeBase::LoadMeshesOnAllMachines_Implementation()
-{
-	FName RowName = FName("Amanda");
- 
-	UAssetLoader::AsyncLoadAsset<USkeletalMesh , FMeshTableRow>(MeshesDataTable , RowName, [](USkeletalMesh* SkeletalMesh)
-	{
-		
-	});
-}
 
-void ALobbyGameModeBase::ChangeView_Implementation(APlayerController* Controller)
-{
-	TArray<AActor*> CameraActors;
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACameraActor::StaticClass(), CameraActors);
-
-	ACameraActor* LobbyCamera = Cast<ACameraActor>(CameraActors[0]);
-
-	Controller->SetViewTarget(LobbyCamera);
-}
 
 
 ALobbyGameModeBase::ALobbyGameModeBase()
@@ -134,6 +110,8 @@ ALobbyGameModeBase::ALobbyGameModeBase()
 void ALobbyGameModeBase::BeginPlay()
 {
 	Super::BeginPlay();
+
+	LobbyLoaderGameState = GetGameState<ALobbyLoaderGameState>();
 
 
 }

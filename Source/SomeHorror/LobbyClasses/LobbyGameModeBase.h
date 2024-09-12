@@ -7,6 +7,7 @@
 #include "Engine/DataTable.h"
 #include "GameFramework/GameModeBase.h"
 #include "SomeHorror/SomeHorrorPlayerController.h"
+#include "SomeHorror/GameStates/LobbyLoaderGameState.h"
 #include "LobbyGameModeBase.generated.h"
 
 USTRUCT(Blueprintable)
@@ -41,22 +42,11 @@ protected:
 
 	const bool IsHost(APlayerController* PlayerController);
 
-protected:
-	//void LoadMeshOnAllMachin
+public:
+	void ChangeEnemy(ALobbyCharacter* NewEnemy);
 
 protected:
-	//UPROPERTY(EditDefaultsOnly)
-	//TSubclassOf<ALobbyCharacter> LobbyCharacter;
-
-	UFUNCTION(NetMulticast , Reliable)
-	void LoadMeshesOnAllMachines();
 	
-	void LoadAnimationAllClient(FName AnimationName , ASomeHorrorPlayerController* LoadInstigator);
-
-	UFUNCTION(Client , Reliable)
-	void ChangeView(APlayerController* PlayerController);
-
-	UAnimationAsset* GetRandomAnimAsset();
 
 	UFUNCTION(BlueprintCallable)
 	FName GetRandomRowName(UDataTable* DataTable);
@@ -73,6 +63,12 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly)
 	TArray<UAnimationAsset*> AnimAssets;
+
+	UPROPERTY()
+	ALobbyLoaderGameState* LobbyLoaderGameState;
+
+	UPROPERTY()
+	ALobbyCharacter* CurrentEnemy;
 
 	
 };

@@ -4,7 +4,6 @@
 #include "LobbyLoaderGameState.h"
 
 #include "GameFramework/Character.h"
-#include "SomeHorror/SomeHorrorPlayerController.h"
 #include "SomeHorror/Loaders/AssetLoader.h"
 #include "SomeHorror/LobbyClasses/LobbyGameModeBase.h"
 
@@ -44,8 +43,32 @@ ALobbyLoaderGameState::ALobbyLoaderGameState()
 	bReplicates = true;
 }
 
+
+
+
+void ALobbyLoaderGameState::SetNameOnWidgets_Implementation(FName Name, ALobbyCharacter* LobbyCharacter)
+{
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, Name.ToString());
+	if (!LobbyCharacter)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, "LobbyCharacter is nullptr");
+		return;
+	}
+	if(HasAuthority())
+	{
+		LobbyCharacter->SetNameToWidget(Name);
+		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, "SetNameOnServer");
+	}
+
+	else
+	{
+		LobbyCharacter->SetNameToWidget(Name);
+		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, "SetNameOnClient");
+	}
+}
+
 void ALobbyLoaderGameState::InitLobbyCharacter_Implementation(FName SkeletalMeshName, UDataTable* MeshDataTable,
-	FName AnimationName, UDataTable* AnimationDataTable, ALobbyCharacter* LobbyCharacter)
+                                                              FName AnimationName, UDataTable* AnimationDataTable, ALobbyCharacter* LobbyCharacter)
 {
 	if (!LobbyCharacter)
 	{
@@ -56,13 +79,12 @@ void ALobbyLoaderGameState::InitLobbyCharacter_Implementation(FName SkeletalMesh
 {
 	if (HasAuthority() && SkeletalMesh)
 	{
-		//LobbyCharacter->GetMesh()->SetSkeletalMeshAsset(SkeletalMesh);
-		//LobbyCharacter->SetSkeletalMesh(SkeletalMesh);
+		LobbyCharacter->SetSkeletalMesh(SkeletalMesh);
 	}
 	else
 	{
 		if (!LobbyCharacter && !SkeletalMesh) return;
-		//LobbyCharacter->SetSkeletalMesh(SkeletalMesh);
+		LobbyCharacter->SetSkeletalMesh(SkeletalMesh);
 	}
 
 	UAssetLoader::AsyncLoadAsset<UAnimationAsset, FAnimationTableRow>(AnimationDataTable, AnimationName, [LobbyCharacter, this , SkeletalMesh](UAnimationAsset* AnimationAsset)
@@ -70,15 +92,14 @@ void ALobbyLoaderGameState::InitLobbyCharacter_Implementation(FName SkeletalMesh
 		if(!AnimationAsset) GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, "AnimAsset is nullptr");
 		if (HasAuthority() && AnimationAsset)
 		{
-			LobbyCharacter->GetMesh()->SetSkeletalMesh(SkeletalMesh);
-			LobbyCharacter->SetSkeletalMesh(SkeletalMesh);
-			LobbyCharacter->GetMesh()->PlayAnimation(AnimationAsset, true);
+			
+			//LobbyCharacter->GetMesh()->PlayAnimation(AnimationAsset, true);
 			LobbyCharacter->SetLobbyAnimation(AnimationAsset);
 		}
 		else
 		{
 			if (!LobbyCharacter && !AnimationAsset) return;
-			LobbyCharacter->SetSkeletalMesh(SkeletalMesh);
+			//LobbyCharacter->SetSkeletalMesh(SkeletalMesh);
 			LobbyCharacter->SetLobbyAnimation(AnimationAsset);
 		}
 	});
