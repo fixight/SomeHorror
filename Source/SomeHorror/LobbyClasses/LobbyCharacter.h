@@ -3,22 +3,27 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "InputAction.h"
+#include "PlayerNameWidget.h"
+#include "Components/SpotLightComponent.h"
+#include "Components/WidgetComponent.h"
 #include "GameFramework/Character.h"
 #include "LobbyCharacter.generated.h"
 
+DECLARE_DELEGATE(FOnInteract)
+
+class UInputMappingContext;
 UCLASS()
 class SOMEHORROR_API ALobbyCharacter : public ACharacter
 {
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this character's properties
 	ALobbyCharacter();
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 public:
@@ -31,13 +36,15 @@ public:
 
 	void SetSkeletalMesh(USkeletalMesh* LobbyMesh);
 
+	void SetLobbyAnimation(UAnimationAsset* AnimationAsset);
+
+	void SetNameToWidget(FName Name);
+
+	UFUNCTION(Server , Reliable)
+	void SetNameToWidgetOnServer(FName Name);
+
 	UFUNCTION(Server , Reliable)
 	void SetSkeletalMeshOnServer(USkeletalMesh* NewMesh);
-
-	UFUNCTION(NetMulticast , Reliable)
-	void SetSkeletalMeshMulticast(USkeletalMesh* NewMesh);
-
-	void SetLobbyAnimation(UAnimationAsset* AnimationAsset);
 
 	UFUNCTION(Server , Reliable)
 	void SetLobbyAnimationOnServer(UAnimationAsset* AnimationAsset);
@@ -49,6 +56,38 @@ public:
 	UFUNCTION()
 	void OnRep_SkeletalMesh();
 
+	UFUNCTION()
+	void OnRep_PlayerName();
+
+protected:
+	UPROPERTY(EditDefaultsOnly)
+	UWidgetComponent* PlayerNameWidgetComponent;
+
+	UPROPERTY()
+	UPlayerNameWidget* PlayerNameWidget;
+
+	UPROPERTY(ReplicatedUsing = OnRep_PlayerName)
+	FName PlayerName;
+
+	UPROPERTY(EditDefaultsOnly)
+	USpotLightComponent* HighLightComponent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
+	UInputMappingContext* InputMappingContext;
+
+	UPROPERTY(EditDefaultsOnly)
+	UInputAction* RightClickAction;
+
+public:
+	void SetHighLightCharacter(const bool IsHightLight);
+
+
+protected:
+	void RightClick();
+
+public:
+	FOnInteract OnInteract;
+
 	
 
 public:	
@@ -59,3 +98,5 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 };
+
+
