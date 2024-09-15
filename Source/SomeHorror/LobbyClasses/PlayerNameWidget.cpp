@@ -7,9 +7,6 @@
 void UPlayerNameWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
-
-	
-
 	
 }
 

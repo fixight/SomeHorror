@@ -9,7 +9,6 @@
 #include "LobbyGameModeBase.h"
 #include "Engine/Engine.h"
 #include "Engine/HitResult.h"
-#include "GameFramework/Character.h"
 #include "GameFramework/PlayerController.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -55,7 +54,6 @@ void ALobbyHud::Tick(float DeltaSeconds)
             }
             else
             {
-                // Если навели не на персонажа
                 if (LastHighLightCharacter)
                 {
                     LastHighLightCharacter->SetHighLightCharacter(false); 
@@ -76,8 +74,7 @@ void ALobbyHud::Tick(float DeltaSeconds)
             }
             
             CurrentHoveredCharacter = nullptr;
-
-            GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, TEXT("Not hovering over any character"));
+            
         }
     }
     
@@ -90,6 +87,19 @@ void ALobbyHud::BeginPlay()
     APlayerController* PC = Cast<APlayerController>(GetOwner());
     PC->SetShowMouseCursor(true);
 
+   
+    if (LobbyInterfaceClass)
+    {
+        LobbyInterface = CreateWidget<UUserWidget>(GetWorld(), LobbyInterfaceClass);
+            
+        if (LobbyInterface)
+        {
+            LobbyInterface->AddToViewport();
+
+        }
+    }
+    
+
 	
 
     
@@ -97,7 +107,9 @@ void ALobbyHud::BeginPlay()
 
 void ALobbyHud::OnPlayerMouseInteract()
 {
-	GEngine->AddOnScreenDebugMessage(-1 , 10.0f , FColor::Green , CurrentHoveredCharacter->GetName());
-    APlayerController* PC = Cast<APlayerController>(GetOwner());
-    Cast<ALobbyGameModeBase>(UGameplayStatics::GetGameMode(GetWorld()))->ChangeEnemy(CurrentHoveredCharacter);
+    if(Owner->HasAuthority() && CurrentHoveredCharacter)
+    {
+        APlayerController* PC = Cast<APlayerController>(GetOwner());
+        Cast<ALobbyGameModeBase>(UGameplayStatics::GetGameMode(GetWorld()))->ChangeEnemy(CurrentHoveredCharacter);
+    }
 }

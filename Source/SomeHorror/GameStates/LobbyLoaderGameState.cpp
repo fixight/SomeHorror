@@ -4,6 +4,7 @@
 #include "LobbyLoaderGameState.h"
 
 #include "GameFramework/Character.h"
+#include "SomeHorror/GameInstances/LobbyTransferGameInstance.h"
 #include "SomeHorror/Loaders/AssetLoader.h"
 #include "SomeHorror/LobbyClasses/LobbyGameModeBase.h"
 
@@ -11,7 +12,6 @@ void ALobbyLoaderGameState::StartLoadAsset_Implementation(FName AssetName, UData
 {
 	if (!LoadInstigator)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, "LobbyCharacter is nullptr");
 		return;
 	}
 
@@ -43,7 +43,14 @@ ALobbyLoaderGameState::ALobbyLoaderGameState()
 	bReplicates = true;
 }
 
-
+void ALobbyLoaderGameState::SaveMeshInfoGameInstance_Implementation(FName MeshName,
+	ALobbyCharacter* LobbyCharacter)
+{
+	if (ULobbyTransferGameInstance* GI = Cast<ULobbyTransferGameInstance>(GetGameInstance()))
+	{
+		GI->SetPlayerMeshInGame(MeshName);
+	}
+}
 
 
 void ALobbyLoaderGameState::SetNameOnWidgets_Implementation(FName Name, ALobbyCharacter* LobbyCharacter)
@@ -51,13 +58,11 @@ void ALobbyLoaderGameState::SetNameOnWidgets_Implementation(FName Name, ALobbyCh
 	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, Name.ToString());
 	if (!LobbyCharacter)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, "LobbyCharacter is nullptr");
 		return;
 	}
 	if(HasAuthority())
 	{
 		LobbyCharacter->SetNameToWidget(Name);
-		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, "SetNameOnServer");
 	}
 
 	else
@@ -75,31 +80,33 @@ void ALobbyLoaderGameState::InitLobbyCharacter_Implementation(FName SkeletalMesh
 		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, "LobbyCharacter is nullptr");
 		return;
 	}
-	UAssetLoader::AsyncLoadAsset<USkeletalMesh, FMeshTableRow>(MeshDataTable, SkeletalMeshName, [LobbyCharacter, this, AnimationDataTable, AnimationName](USkeletalMesh* SkeletalMesh)mutable 
-{
-	if (HasAuthority() && SkeletalMesh)
+	UAssetLoader::AsyncLoadAsset<USkeletalMesh, FMeshTableRow>(MeshDataTable, SkeletalMeshName, [LobbyCharacter, this, AnimationDataTable, AnimationName , SkeletalMeshName](USkeletalMesh* SkeletalMesh)mutable 
 	{
-		LobbyCharacter->SetSkeletalMesh(SkeletalMesh);
-	}
-	else
-	{
-		if (!LobbyCharacter && !SkeletalMesh) return;
-		LobbyCharacter->SetSkeletalMesh(SkeletalMesh);
-	}
+		
+		
+		
+
+		if (HasAuthority() && SkeletalMesh)
+		{
+			SaveMeshInfoGameInstance(SkeletalMeshName, LobbyCharacter);
+			LobbyCharacter->SetSkeletalMesh(SkeletalMesh);
+		}
+
+		else
+		{
+			if (!LobbyCharacter && !SkeletalMesh) return;
+			LobbyCharacter->SetSkeletalMesh(SkeletalMesh);
+		}
 
 	UAssetLoader::AsyncLoadAsset<UAnimationAsset, FAnimationTableRow>(AnimationDataTable, AnimationName, [LobbyCharacter, this , SkeletalMesh](UAnimationAsset* AnimationAsset)
 	{
-		if(!AnimationAsset) GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, "AnimAsset is nullptr");
 		if (HasAuthority() && AnimationAsset)
 		{
-			
-			//LobbyCharacter->GetMesh()->PlayAnimation(AnimationAsset, true);
 			LobbyCharacter->SetLobbyAnimation(AnimationAsset);
 		}
 		else
 		{
 			if (!LobbyCharacter && !AnimationAsset) return;
-			//LobbyCharacter->SetSkeletalMesh(SkeletalMesh);
 			LobbyCharacter->SetLobbyAnimation(AnimationAsset);
 		}
 	});
@@ -112,7 +119,6 @@ void ALobbyLoaderGameState::LoadAndSetSkeletalMesh_Implementation(FName AssetNam
 {
 	if (!LoadInstigator)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, "LobbyCharacter is nullptr");
 		return;
 	}
 
