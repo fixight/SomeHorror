@@ -8,6 +8,7 @@
 #include "LobbyHud.h"
 #include "Engine/Engine.h"
 #include "Net/UnrealNetwork.h"
+#include "SomeHorror/GameInstances/LobbyTransferGameInstance.h"
 
 // Sets default values
 ALobbyCharacter::ALobbyCharacter()
@@ -40,7 +41,6 @@ void ALobbyCharacter::BeginPlay()
 
 	if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
 	{
-		// Получаем Enhanced Input Subsystem
 		UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer());
 
 		if (Subsystem)
@@ -48,6 +48,13 @@ void ALobbyCharacter::BeginPlay()
 			Subsystem->AddMappingContext(InputMappingContext, 0);
 		}
 	}
+
+
+	if (ULobbyTransferGameInstance* GI = Cast<ULobbyTransferGameInstance>(GetGameInstance()))
+	{
+		LocalGameInstance = GI;
+	}
+	
 
 	UUserWidget* UserWidget = PlayerNameWidgetComponent->GetUserWidgetObject();
 	if(UserWidget)
@@ -58,6 +65,10 @@ void ALobbyCharacter::BeginPlay()
 
 void ALobbyCharacter::SetSkeletalMesh(USkeletalMesh* LobbyMesh)
 {
+	FName Name = FName(*LobbyMesh->GetName());
+
+	LocalGameInstance->PlayerMeshInGame = Name;
+
 	if(HasAuthority())
 	{
 		GetMesh()->SetSkeletalMesh(LobbyMesh , false);
@@ -111,7 +122,6 @@ void ALobbyCharacter::OnRep_PlayerName()
 {
 	if(PlayerNameWidget)
 	{
-		GEngine->AddOnScreenDebugMessage(-1 , 4.0f , FColor::Green , "TextRepl");
 		PlayerNameWidget->SetPlayerNameText(PlayerName);
 	}
 }
@@ -120,7 +130,6 @@ void ALobbyCharacter::SetNameToWidget(FName Name)
 {
 	if(HasAuthority())
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, "SetNameOnServer");
 		if(PlayerNameWidget)
 		{
 			PlayerName = Name;
@@ -130,7 +139,6 @@ void ALobbyCharacter::SetNameToWidget(FName Name)
 
 	else
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, "SetNameOnClient");
 		SetNameToWidgetOnServer(Name);
 	}
 }
@@ -148,7 +156,6 @@ void ALobbyCharacter::SetHighLightCharacter(const bool IsHightLight)
 
 void ALobbyCharacter::RightClick()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Green, "RightClick");
 
 	APlayerController* PlayerController = Cast<APlayerController>(GetController());
 
@@ -160,8 +167,7 @@ void ALobbyCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	
-
-	//if(LobbyAnimation) OnRep_LobbyAnimation();
+	
 }
 
 void ALobbyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)

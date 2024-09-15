@@ -94,10 +94,6 @@ void APlayerCharacter::Move(const FInputActionValue& Value)
 {
 	FVector2D MovementVector = Value.Get<FVector2D>();
 	
-	if(PlayerCustomState == EPlayerState::EPS_Alive)
-	{
-		
-	}
 
 	if (Controller != nullptr)
 	{
@@ -127,13 +123,10 @@ void APlayerCharacter::EquipButtonPressed()
 	GetWorld()->LineTraceSingleByChannel(HitResult , CameraLocation , CameraLocation + PlayerCamera->GetForwardVector() * InteractDistance , ECC_Visibility);
 
 	if(!HitResult.bBlockingHit) return;
-
-	GEngine->AddOnScreenDebugMessage(-1 , 3.0f , FColor::Red , HitResult.GetActor()->GetName());
+	
 	
 	if(HitResult.GetActor()->Implements<UEquiptableInterface>())
 	{
-		GEngine->AddOnScreenDebugMessage(-1 , 3.0f , FColor::Red , "CanBeEqueped");
-
 		if(HasAuthority())
 		{
 			EquipeActor = Cast<ADefaultEquipeActor>(HitResult.GetActor());
@@ -194,12 +187,9 @@ void APlayerCharacter::PlayerCrouch()
 {
 	if(PlayerCustomState != EPlayerState::EPS_Alive || PlayerCustomState == EPlayerState::EPS_KnockDown) return;
 	
-	GEngine->AddOnScreenDebugMessage(-1 , 3.0f , FColor::Red , "Crouch");
-
 	if(CanCrouch())
 	{
-
-		GEngine->AddOnScreenDebugMessage(-1 , 3.0f , FColor::Red , "Crouch");
+		
 		Crouch();
 
 		if(HasAuthority())
@@ -240,8 +230,7 @@ void APlayerCharacter::PlayerStartRunning_Implementation()
 		
 	
 	PlayerMovementState = EPlayerMovementState::EPMS_Default;
-
-	GEngine->AddOnScreenDebugMessage(-1 , 10.0f , FColor::Red , "Running");
+	
 	
 	MaxSpeed = MaxRunSpeed;
 
@@ -314,7 +303,7 @@ void APlayerCharacter::OnRep_MaxSpeed()
 
 void APlayerCharacter::OnRep_MovementState()
 {
-	GEngine->AddOnScreenDebugMessage(-1 , 10.0f , FColor::Orange , "MovementReplication");
+	//
 }
 
 

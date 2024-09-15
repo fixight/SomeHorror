@@ -103,8 +103,7 @@ FName ALobbyGameModeBase::GetRandomRowName(UDataTable* DataTable)
 
 ALobbyGameModeBase::ALobbyGameModeBase()
 {
-
-	//DefaultPawnClass = LobbyCharacter;
+	
 }
 
 void ALobbyGameModeBase::BeginPlay()

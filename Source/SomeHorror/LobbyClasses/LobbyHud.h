@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "LobbyCharacter.h"
+#include "LobbyInterface.h"
 #include "GameFramework/HUD.h"
 #include "LobbyHud.generated.h"
 
@@ -27,6 +28,12 @@ private:
 	
 	UPROPERTY()
 	ALobbyCharacter* CurrentHoveredCharacter;
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<ULobbyInterface> LobbyInterfaceClass;
+
+	UPROPERTY()
+	UUserWidget* LobbyInterface;
 
 public:
 	UFUNCTION()

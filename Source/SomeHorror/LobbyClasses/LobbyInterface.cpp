@@ -7,26 +7,20 @@
 #include "Components/CanvasPanelSlot.h"
 #include "GameFramework/PlayerState.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "SomeHorror/GameInstances/LobbyTransferGameInstance.h"
 
 void ULobbyInterface::NativeConstruct()
 {
 	Super::NativeConstruct();
-	
+
+	ExitButton->OnClicked.AddDynamic(this , &ULobbyInterface::Disconect);
 	
 }
 
 void ULobbyInterface::Disconect()
 {
-	UWorld* World = GetWorld();
-	if (World)
-	{
-		APlayerController* PlayerController = World->GetFirstPlayerController();
-		if (PlayerController)
-		{
-			PlayerController->ClientTravel("/Game/Maps/EXIT", ETravelType::TRAVEL_Absolute);
-			
-		}
-	}
+	FName Name = Cast<ULobbyTransferGameInstance>(GetOwningPlayer()->GetGameInstance())->PlayerMeshInGame;
+	
 }
 
 

@@ -31,7 +31,8 @@ public:
 	UFUNCTION(NetMulticast , Reliable)
 	void SetNameOnWidgets(FName Name , ALobbyCharacter* LobbyCharacter);
 
-	
+	UFUNCTION(Client , Reliable)
+	void SaveMeshInfoGameInstance(FName MeshName , ALobbyCharacter* LobbyCharacter);
 	
 };
 

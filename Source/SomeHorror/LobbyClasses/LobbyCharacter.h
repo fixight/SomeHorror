@@ -8,6 +8,7 @@
 #include "Components/SpotLightComponent.h"
 #include "Components/WidgetComponent.h"
 #include "GameFramework/Character.h"
+#include "SomeHorror/GameInstances/LobbyTransferGameInstance.h"
 #include "LobbyCharacter.generated.h"
 
 DECLARE_DELEGATE(FOnInteract)
@@ -65,6 +66,9 @@ protected:
 
 	UPROPERTY()
 	UPlayerNameWidget* PlayerNameWidget;
+
+	UPROPERTY()
+	ULobbyTransferGameInstance* LocalGameInstance;
 
 	UPROPERTY(ReplicatedUsing = OnRep_PlayerName)
 	FName PlayerName;
